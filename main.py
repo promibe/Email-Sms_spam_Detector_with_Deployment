@@ -1,5 +1,4 @@
-#importing the necessary libraries
-#libraries for dataframe preprocessing and visualization
+# Import necessary libraries
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -10,47 +9,30 @@ from xgboost import XGBClassifier
 from sklearn.svm import SVC
 import streamlit as st
 import pickle
-#prepreocession libraries
-import nltk
-#importing libraries for stopwords, stem
-from nltk.corpus import stopwords
-from nltk.stem.porter import PorterStemmer
-stopwords.words('english')
+import spacy  # Using SpaCy instead of NLTK
+from spacy.lang.en.stop_words import STOP_WORDS  # Importing stopwords
 import string
 from sklearn.feature_extraction.text import TfidfVectorizer
 
+# Load the SpaCy English model
+nlp = spacy.load("en_core_web_sm")
 
-# set page configuration
-st.set_page_config(page_title='Spam Message Detector', layout='centered')
+# Set page configuration
+st.set_page_config(page_title="Spam Message Detector", layout="centered")
 
-nltk.download('punkt')
-nltk.download('punkt_tab')
-nltk.download('stopwords')
-
-
-
-#function for text preprocessiong
+# Function for text preprocessing
 def transform_text(text):
     # Convert to lowercase
     text = text.lower()
 
-    # Tokenization
-    words = nltk.word_tokenize(text)
+    # Process the text with SpaCy
+    doc = nlp(text)
 
-    # Remove non-alphanumeric characters (punctuation & special symbols)
-    words = [word for word in words if word.isalnum()]
-
-    # Remove stopwords
-    stop_words = set(stopwords.words('english'))
-    string_punctuation = list(string.punctuation)
-    filtered_words = [word for word in words if word not in stop_words and word not in string.punctuation]
-
-    # Stemming
-    stemmer = nltk.PorterStemmer()
-    stemmed_words = [stemmer.stem(word) for word in filtered_words]
+    # Remove stopwords, punctuation, and non-alphanumeric tokens
+    filtered_tokens = [token.lemma_ for token in doc if token.is_alpha and token.text not in STOP_WORDS]
 
     # Return processed text as a tokenized list
-    return " ".join(stemmed_words)
+    return " ".join(filtered_tokens)
 
 # Load trained model
 with open("model.pkl", "rb") as file:
@@ -61,23 +43,23 @@ with open("vectorizer.pkl", "rb") as file:
     tfidf = pickle.load(file)
 
 def create_GUI():
-    #header section
-    st.title("Spam messages Classifier")
-    st.write("This classify's all spam messages")
+    # Header section
+    st.title("Spam Messages Classifier")
+    st.write("This classifies all spam messages.")
 
-    #input text to classify
+    # Input text to classify
     st.header("Input Email Text/SMS Text")
-
     text = st.text_input("Enter text")
 
-    # using the transform text function to transform the inputed text
-    transformed_text = transform_text(text)
-
-    #vectorize the transformed text
-    vectorized_input = tfidf.transform(transform_text)
-
     if st.button("Classify Text"):
-        result = model.predict(vectorized_input[0])
+        # Using the transform_text function to transform the inputted text
+        transformed_text = transform_text(text)
+
+        # Vectorize the transformed text
+        vectorized_input = tfidf.transform([transformed_text])  # Fixed input format
+
+        # Predict using the trained model
+        result = model.predict(vectorized_input)[0]
 
         if result == 0:
             st.success("Spam Message")
@@ -86,8 +68,3 @@ def create_GUI():
 
 if __name__ == "__main__":
     create_GUI()
-
-
-
-
-

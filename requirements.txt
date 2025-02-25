@@ -1,5 +1,6 @@
 joblib
 nltk
+spacy==3.7.2
 streamlit
 catboost
 scikit-learn
