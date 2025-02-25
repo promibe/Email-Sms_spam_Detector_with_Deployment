@@ -1,0 +1,4 @@
+joblib
+nltk
+streamlit
+catboost
