@@ -2,3 +2,4 @@ joblib
 nltk
 streamlit
 catboost
+scikit-learn
