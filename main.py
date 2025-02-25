@@ -12,6 +12,13 @@ import streamlit as st
 import pickle
 #prepreocession libraries
 import nltk
+#importing libraries for stopwords, stem
+from nltk.corpus import stopwords
+from nltk.stem.porter import PorterStemmer
+stopwords.words('english')
+import string
+from sklearn.feature_extraction.text import TfidfVectorizer
+
 
 # set page configuration
 st.set_page_config(page_title='Spam Message Detector', layout='centered')
@@ -47,11 +54,11 @@ def transform_text(text):
 
 # Load trained model
 with open("model.pkl", "rb") as file:
-    classifier = pickle.load(file)
+    model = pickle.load(file)
 
 # Load vectorizer (e.g., TfidfVectorizer or CountVectorizer)
 with open("vectorizer.pkl", "rb") as file:
-    vectorizer = pickle.load(file)
+    tfidf = pickle.load(file)
 
 def create_GUI():
     #header section
@@ -65,6 +72,20 @@ def create_GUI():
 
     # using the transform text function to transform the inputed text
     transformed_text = transform_text(text)
+
+    #vectorize the transformed text
+    vectorized_input = tfidf.transform(transform_text)
+
+    if st.button("Classify Text"):
+        result = model.predict(vectorized_input[0])
+
+        if result == 0:
+            st.success("Spam Message")
+        else:
+            st.success("Not Spam Message")
+
+if __name__ == "__main__":
+    create_GUI()
 
 
 
